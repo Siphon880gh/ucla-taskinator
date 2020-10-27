@@ -13,7 +13,35 @@
     <header>
         <h1 class="page-title">Taskinator</h1>
         <p>Click the button below to add a new task!</p>
-        <button class="btn" id="save-task">Add Task</button>
+        <form id="task-form">
+            <div class="form-group">
+              <input type="text" name="task-name" placeholder="Enter Task Name" />
+            </div>
+            <div class="form-group">
+              <select name="task-type" class="select-dropdown">
+                <option value="" selected disabled>Pick a task type</option>
+                <option value="" disabled>[Self-effectiveness]</option>
+                <option value="Health">Health</option>
+                <option value="Finance">Finance</option>
+                <option value="Career">Career</option>
+                <option value="Productivity">Productivity</option>
+                <option value="" disabled>[Connection]</option>
+                <option value="Social">Social</option>
+                <option value="Love">Love</option>
+                <option value="" disabled>[Stimulating]</option>
+                <option value="Hobby">Hobby</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Spiritual">Spiritual</option>
+                <option value="" disabled>[Fulfillment]</option>
+                <option value="Personal-Growth">Personal Growth</option>
+                <option value="Aspiration">Aspiration</option>
+                <option value="Influence">Influence</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <button class="btn" id="save-task" type="submit">Add Task</button>
+          </div>
+        </form>
     </header>
 
     <main class="page-content">

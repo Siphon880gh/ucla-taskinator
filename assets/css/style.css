@@ -1,7 +1,10 @@
-/* body::before {
+/* Test
+body::before {
   content: "Css connected";
-} */
+}
+*/
 
+/* Layout */
 * {
   box-sizing: border-box;
 }
