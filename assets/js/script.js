@@ -16,6 +16,7 @@ var taskFormHandler = (event) => {
         alert("Error: You need to fill out the task form.");
         return false;
     }
+    formEl.reset();
 
     createTaskEl({name:taskNameInputVal, type:taskTypeOptionVal});
 }
