@@ -12,14 +12,8 @@ var taskFormHandler = (event) => {
     var taskTypeOptionVal = taskTypeOption.value;
 
     // Validate values
-    if(taskNameInputVal.length===0) {
-        alert("Error: Enter a name for the task.");
-        taskNameInput.focus();
-        return false;
-    }
-    if(taskTypeOptionVal.length===0) {
-        alert("Error: Select a task type.");
-        taskTypeOption.focus();
+    if(!taskNameInputVal || !taskTypeOptionVal) {
+        alert("Error: You need to fill out the task form.");
         return false;
     }
 
