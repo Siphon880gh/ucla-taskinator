@@ -1,10 +1,15 @@
+// persistence model
+var tasks = [];
+
+// DOM
 var pageContentEl = document.querySelector("#page-content");
 var formEl = document.querySelector("#task-form");
-var tasksToDoEl =  document.querySelector("#tasks-to-do");
+var tasksToDoEl = document.querySelector("#tasks-to-do");
 var tasksInProgressEl = document.querySelector("#tasks-in-progress");
 var tasksCompletedEl = document.querySelector("#tasks-completed");
 var taskIdCounter = 0;
 
+// DOM events
 tasksToDoEl.addEventListener("dragover", allowDrop);
 tasksToDoEl.addEventListener("dragover", styleDropZone);
 tasksToDoEl.addEventListener("dragleave", unstyleDropZone);
@@ -29,10 +34,8 @@ function allowDrop(event) {
     event.preventDefault();
 }
 
-// Todo: Review; Unlike jQuery's .closest, js .closest finds the closest ancestor that matches the query or is okay with the element matching the query too
-// So this is unnecessary: if(event.target.matches(".task-list") || event.target.closest(".task-list"))
 function styleDropZone(event) {
-    if(event.target.closest(".task-list"))
+    if(event.target.closest(".task-list") && event.target.matches(".task-list"))
         event.target.setAttribute("style", "background: rgba(68, 233, 255, 0.7); border-style: dashed;");
 
 }
@@ -48,21 +51,34 @@ function dropZoneHandler(event) {
         var taskEl = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
         taskListEl.append(taskEl);
 
+        function updatePersistenceModel(taskId, statusValue) {
+            for (var i = 0; i < tasks.length; i++) {
+                if (tasks[i].id === parseInt(taskId)) {
+                  tasks[i].status = statusValue.toLowerCase();
+                  break;
+                }
+            }
+            saveTasks();
+        }
+
         // Change status dropdown in the task item
         var taskStatusEl = taskEl.querySelector(`select`);
         if(taskListEl.matches("#tasks-to-do")) {
             taskStatusEl.value = "To Do";
+            updatePersistenceModel(taskId, "To Do");
         } else if(taskListEl.matches("#tasks-in-progress")) {
             taskStatusEl.value = "In Progress";
+            updatePersistenceModel(taskId, "In Progress");
 
         } else if(taskListEl.matches("#tasks-completed")) {
             taskStatusEl.value = "Completed";
+            updatePersistenceModel(taskId, "Completed");
 
         }
     }
 }
 
-var taskFormHandler = (event) => {
+function taskFormHandler(event) {
     event.preventDefault();
 
     // Capture values
@@ -82,19 +98,33 @@ var taskFormHandler = (event) => {
         var taskId = formEl.getAttribute("data-task-id");
         completeEditTask({name:taskNameInputted, type:taskTypeInputted, taskId});
     } else {
-        createTaskEl({name:taskNameInputted, type:taskTypeInputted});
+        createTaskEl({
+                        name:taskNameInputted, 
+                        type:taskTypeInputted,
+                        status:"to do"
+                    },
+                    tasksToDoEl,
+                    false); // not creating tasks from loading localStorage, so go save
     }
     formEl.reset();
 } // taskFormHandler
 
 
 function completeEditTask(editTaskObj) {
-    var {name, type, taskId} = editTaskObj;
+    var {name, type, taskId, status} = editTaskObj;
     var selectedTask = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
     selectedTask.querySelector(".task-name").textContent = name;
     selectedTask.querySelector(".task-type").textContent = type;
-
     formEl.removeAttribute("data-task-id");
+
+    // update persistence model
+    for(var i=0; i<tasks.length; i++) {
+        if(tasks[i].id===taskId) {
+            tasks[i].status = status;
+            break;
+        }
+    }
+    saveTasks();
 
     var submitBtn = document.querySelector("#save-task");
     submitBtn.textContent = "Add Task";
@@ -120,6 +150,11 @@ var createTaskEl = (taskDataObj) => {
     
     // add list item to list
     tasksToDoEl.appendChild(listItemEl);
+
+    // add to persistence model
+    taskDataObj.id = taskIdCounter;
+    tasks.push(taskDataObj);
+    saveTasks();
 
     // increment task counter
     taskIdCounter++;
@@ -215,12 +250,32 @@ function taskStatusChangeHandler(event) {
 function deleteTask(taskId) {
     var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
     if(confirm("Delete task?")) taskSelected.remove();
+
+    //update persistence model
+    var updatedTasks = [];
+    for (let i = 0; i < tasks.length; i++) {
+        // keep the task in updatedTasks if it doesn't match the deleted task by ID
+        if(tasks[i].id!==parseInt(taskId))
+            updatedTasks.push(tasks[i]);
+    }
+    tasks = updatedTasks;
+    saveTasks();
 };
 
 function editTask(taskId) {
     var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
     var title = taskSelected.querySelector(".task-name").textContent;
     var taskType = taskSelected.querySelector(".task-type").textContent;
+
+    // update persistance model
+    for (var i = 0; i < tasks.length; i++) {
+        if (tasks[i].id === parseInt(taskId)) {
+            tasks[i].name = taskName;
+            tasks[i].type = taskType;
+            break;
+        }
+    };
+    saveTasks();
 
     var formTaskName = document.querySelector("input[name='task-name']");
     var formTaskType = document.querySelector("select[name='task-type']");
@@ -233,3 +288,57 @@ function editTask(taskId) {
     submitBtn.textContent = "Save Task";
     
 }
+
+function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+// Loading persistent model
+function loadTasks() {
+    var jsonTasks = localStorage.getItem("tasks");
+    if(!jsonTasks) return;
+    tasks = JSON.parse(jsonTasks);
+
+    function createTaskElAt(taskDataObj, taskColumnEl, taskId) {
+
+        var {name, type, id} = taskDataObj;
+        var taskId = id;
+
+        // create list item
+        var listItemEl = document.createElement("li");
+        listItemEl.className = "task-item";
+        listItemEl.setAttribute("draggable", true);
+
+        // add unique task id based on task counter for querying
+        listItemEl.setAttribute("data-task-id", taskId);
+
+        // create div to hold task info
+        var taskInfoEl = document.createElement("div");
+        taskInfoEl.innerHTML = `<h3 class="task-name">${name}</h3><span class="task-type">${type}</span>`;
+
+        listItemEl.appendChild(taskInfoEl);
+        listItemEl.appendChild( createTaskActions(taskId) );
+        
+        // add list item to list
+        taskColumnEl.appendChild(listItemEl);
+
+        // increment task counter for new tasks after these preloaded tasks
+        taskIdCounter++;
+    }
+
+    for (let i = 0; i < tasks.length; i++) {
+        var task = tasks[i];
+        switch(task.status) {
+            case "to do":
+                createTaskElAt(task, tasksToDoEl);
+                break;
+            case "in progress":
+                createTaskElAt(task, tasksInProgressEl);
+                break;
+            case "completed":
+                createTaskElAt(task, tasksCompletedEl);
+                break;
+        }
+    } // for
+}
+loadTasks();
