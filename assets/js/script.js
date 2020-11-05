@@ -17,12 +17,10 @@ var taskFormHandler = (event) => {
         return false;
     }
 
-    var submitBtn = document.querySelector("#save-task");
-
     // The form either creates a new task or edits an existing task
-    var isEdit = submitBtn.hasAttribute("data-task-id");
+    var isEdit = formEl.hasAttribute("data-task-id");
     if(isEdit) {
-        var taskId = submitBtn.getAttribute("data-task-id");
+        var taskId = formEl.getAttribute("data-task-id");
         completeEditTask({name:taskNameInputted, type:taskTypeInputted, taskId});
     } else {
         createTaskEl({name:taskNameInputted, type:taskTypeInputted});
@@ -37,8 +35,9 @@ function completeEditTask(editTaskObj) {
     selectedTask.querySelector(".task-name").textContent = name;
     selectedTask.querySelector(".task-type").textContent = type;
 
+    formEl.removeAttribute("data-task-id");
+
     var submitBtn = document.querySelector("#save-task");
-    submitBtn.removeAttribute("data-task-id");
     submitBtn.textContent = "Add Task";
 } // completeEditTask
 
@@ -142,8 +141,9 @@ function editTask(taskId) {
     formTaskName.value = title;
     formTaskType.value = taskType;
 
+    formEl.setAttribute("data-task-id", taskId);
+
     var submitBtn = document.querySelector("#save-task");
     submitBtn.textContent = "Save Task";
-    submitBtn.setAttribute("data-task-id", taskId);
     
 }
