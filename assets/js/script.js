@@ -309,7 +309,7 @@ function loadTasks() {
 
     function createTaskElAt(taskDataObj, taskColumnEl, taskId) {
 
-        var {name, type, id} = taskDataObj;
+        var {name, type, id, status} = taskDataObj;
         var taskId = id;
 
         // create list item
@@ -326,16 +326,16 @@ function loadTasks() {
 
         listItemEl.appendChild(taskInfoEl);
         listItemEl.appendChild( createTaskActions(taskId) );
-
-        switch(type) {
+        
+        switch(status) {
             case "todo":
-                listItemEl.querySelector("select").value = "To Do";
+                listItemEl.querySelector(".select-status").value = "To Do";
                 break;
             case "in progress":
-                listItemEl.querySelector("select").value = "In Progress";
+                listItemEl.querySelector(".select-status").value = "In Progress";
                 break;
             case "completed":
-                listItemEl.querySelector("select").value = "Completed";
+                listItemEl.querySelector(".select-status").value = "Completed";
                 break;
         }
         
