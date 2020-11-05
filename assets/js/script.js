@@ -245,7 +245,15 @@ function taskStatusChangeHandler(event) {
             tasksCompletedEl.appendChild(taskEl);
     }
 
-}
+    for (var i = 0; i < tasks.length; i++) {
+        if(tasks[i].id===parseInt(taskId)) {
+            tasks[i].status = statusInputted;
+            break;
+        }
+    }
+    saveTasks();
+
+} // taskStatusChangeHandler
 
 function deleteTask(taskId) {
     var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
@@ -318,6 +326,18 @@ function loadTasks() {
 
         listItemEl.appendChild(taskInfoEl);
         listItemEl.appendChild( createTaskActions(taskId) );
+
+        switch(type) {
+            case "todo":
+                listItemEl.querySelector("select").value = "To Do";
+                break;
+            case "in progress":
+                listItemEl.querySelector("select").value = "In Progress";
+                break;
+            case "completed":
+                listItemEl.querySelector("select").value = "Completed";
+                break;
+        }
         
         // add list item to list
         taskColumnEl.appendChild(listItemEl);
