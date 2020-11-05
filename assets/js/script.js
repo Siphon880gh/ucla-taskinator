@@ -5,6 +5,63 @@ var tasksInProgressEl = document.querySelector("#tasks-in-progress");
 var tasksCompletedEl = document.querySelector("#tasks-completed");
 var taskIdCounter = 0;
 
+tasksToDoEl.addEventListener("dragover", allowDrop);
+tasksToDoEl.addEventListener("dragover", styleDropZone);
+tasksToDoEl.addEventListener("dragleave", unstyleDropZone);
+tasksToDoEl.addEventListener("drop", dropZoneHandler);
+tasksToDoEl.addEventListener("drop", unstyleDropZone);
+
+tasksInProgressEl.addEventListener("dragover", allowDrop);
+tasksInProgressEl.addEventListener("dragover", styleDropZone);
+tasksInProgressEl.addEventListener("dragleave", unstyleDropZone);
+tasksInProgressEl.addEventListener("drop", dropZoneHandler);
+tasksInProgressEl.addEventListener("drop", unstyleDropZone);
+
+tasksCompletedEl.addEventListener("dragover", allowDrop);
+tasksCompletedEl.addEventListener("dragover", styleDropZone);
+tasksCompletedEl.addEventListener("dragleave", unstyleDropZone);
+tasksCompletedEl.addEventListener("drop", dropZoneHandler);
+tasksCompletedEl.addEventListener("drop", unstyleDropZone);
+
+
+/* Default behavior is that an element is never droppable. So you have to preventDefault */
+function allowDrop(event) {
+    event.preventDefault();
+}
+
+// Todo: Review; Unlike jQuery's .closest, js .closest finds the closest ancestor that matches the query or is okay with the element matching the query too
+// So this is unnecessary: if(event.target.matches(".task-list") || event.target.closest(".task-list"))
+function styleDropZone(event) {
+    if(event.target.closest(".task-list"))
+        event.target.setAttribute("style", "background: rgba(68, 233, 255, 0.7); border-style: dashed;");
+
+}
+
+function unstyleDropZone(event) {
+    event.target.removeAttribute("style");
+}
+
+function dropZoneHandler(event) {
+    var taskListEl = event.target.closest(".task-list");
+    if(taskListEl) {
+        var taskId = event.dataTransfer.getData("dragSessionTaskId");
+        var taskEl = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
+        taskListEl.append(taskEl);
+
+        // Change status dropdown in the task item
+        var taskStatusEl = taskEl.querySelector(`select`);
+        if(taskListEl.matches("#tasks-to-do")) {
+            taskStatusEl.value = "To Do";
+        } else if(taskListEl.matches("#tasks-in-progress")) {
+            taskStatusEl.value = "In Progress";
+
+        } else if(taskListEl.matches("#tasks-completed")) {
+            taskStatusEl.value = "Completed";
+
+        }
+    }
+}
+
 var taskFormHandler = (event) => {
     event.preventDefault();
 
@@ -28,7 +85,7 @@ var taskFormHandler = (event) => {
         createTaskEl({name:taskNameInputted, type:taskTypeInputted});
     }
     formEl.reset();
-}
+} // taskFormHandler
 
 
 function completeEditTask(editTaskObj) {
@@ -49,6 +106,7 @@ var createTaskEl = (taskDataObj) => {
     // create list item
     var listItemEl = document.createElement("li");
     listItemEl.className = "task-item";
+    listItemEl.setAttribute("draggable", true);
 
     // add unique task id based on task counter for querying
     listItemEl.setAttribute("data-task-id", taskIdCounter);
@@ -117,6 +175,12 @@ function createTaskActions(taskId) {
 
 formEl.addEventListener("submit", taskFormHandler);
 pageContentEl.addEventListener("click", taskButtonHandler);
+pageContentEl.addEventListener("dragstart", dragTaskHandler);
+
+function dragTaskHandler(event) {
+    var taskId = event.target.getAttribute("data-task-id");
+    event.dataTransfer.setData("dragSessionTaskId", taskId);
+}
 
 function taskButtonHandler(event) {
     console.log(event.target)
